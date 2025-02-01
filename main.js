@@ -45,6 +45,7 @@ ipcMain.on("save-image", async (event, dataUrl, filePath) => {
 
 
 
+
 // Load saved drawings on startup
 ipcMain.handle("load-gallery", async () => {
     return fs.readdirSync(saveFolder)
@@ -56,9 +57,9 @@ ipcMain.handle("load-gallery", async () => {
 ipcMain.on("delete-drawing", (event, filePath) => {
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        event.reply("delete-drawing-response", { success: true, path: filePath });
+        event.reply("delete-image-response", { success: true, path: filePath });
     } else {
-        event.reply("delete-drawing-response", { success: false, error: "File not found" });
+        event.reply("delete-image-response", { success: false, error: "File not found" });
     }
 });
 

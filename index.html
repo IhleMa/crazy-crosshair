@@ -51,44 +51,61 @@
     display: flex;
     flex-wrap: wrap;
     margin-top: 10px;
+    gap: 5px; /* Ensures equal spacing */
 }
 
+/* Shared styles for both thumbnails and the placeholder */
 .gallery-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: center; /* Center content */
     width: 50px;
-    height: 50px;
+    height: 50px; /* Make it square */
     border: 1px solid black;
     cursor: pointer;
-    background-color: lightgray;
-    font-size: 20px;
-    font-weight: bold;
-    text-align: center;
-
+    position: relative;
 }
 
+/* Placeholder Button (`+`) */
+#new-drawing-placeholder {
+    background-color: lightgray;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 50px; /* Center the `+` */
+    user-select: none;
+}
 
+/* Styles for Thumbnails */
 .gallery-img {
     width: 50px;
     height: 50px;
-    cursor: pointer;
     border: 1px solid black;
-    image-rendering: pixelated; /* Preserve sharp edges */
+    cursor: pointer;
+    image-rendering: pixelated;
     image-rendering: crisp-edges;
-    image-rendering: -moz-crisp-edges; /* Firefox */
+    image-rendering: -moz-crisp-edges;
 }
 
-
+/* Styles for Delete Button */
 .delete-btn {
-    margin-top: 3px;
-    background: red;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
     color: white;
     border: none;
     cursor: pointer;
-    font-size: 12px;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    text-align: center;
+    line-height: 16px;
+    border-radius: 3px;
 }
+
+
 
     </style>
 </head>
@@ -207,13 +224,13 @@
         window.electronAPI.saveImage(dataUrl);
     }
 
-    window.electronAPI.onSaveResponse((response) => {
-        if (response.success) {
-            alert(`Image saved successfully at: ${response.path}`);
-        } else {
-            alert(`Error saving image: ${response.error}`);
-        }
-    });
+    // window.electronAPI.onSaveResponse((response) => {
+    //     if (response.success) {
+    //         // alert(`Image saved successfully at: ${response.path}`);
+    //     } else {
+    //         alert(`Error saving image: ${response.error}`);
+    //     }
+    // });
         
         canvas.addEventListener("contextmenu", (event) => event.preventDefault());
     </script>
