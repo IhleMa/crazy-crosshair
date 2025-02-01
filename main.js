@@ -31,7 +31,6 @@ ipcMain.on("save-image", async (event, dataUrl, filePath) => {
         fs.mkdirSync(saveFolder, { recursive: true });
     }
 
-    // If editing an existing file, overwrite it
     const fileToSave = filePath ? filePath : path.join(saveFolder, `drawing-${Date.now()}.png`);
     const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
 
@@ -43,6 +42,7 @@ ipcMain.on("save-image", async (event, dataUrl, filePath) => {
         }
     });
 });
+
 
 
 // Load saved drawings on startup
