@@ -2,7 +2,9 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electronAPI", {
     saveImage: (dataUrl) => ipcRenderer.send("save-image", dataUrl),
-    onSaveResponse: (callback) => ipcRenderer.on("save-image-response", (_event, response) => callback(response))
+    loadGallery: () => ipcRenderer.invoke("load-gallery"),
+    deleteDrawing: (filePath) => ipcRenderer.send("delete-drawing", filePath),
+    onDeleteResponse: (callback) => ipcRenderer.on("delete-drawing-response", (_event, response) => callback(response)),
 });
 
 
