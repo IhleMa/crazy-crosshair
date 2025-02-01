@@ -1,0 +1,42 @@
+{
+  "name": "crazycrosshair",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "dev.marvin-ihle.crazycrosshair",
+    "productName": "Crazy Crosshair",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "keywords": [],
+  "author": "Marvin Ihle",
+  "license": "ISC",
+  "description": "Simple Crosshair Overlay"
+}

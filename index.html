@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Drawing Canvas</title>
+    <style>
+        .container {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .horizontal-axis, .vertical-axis {
+            position: absolute;
+            background-color: black;
+        }
+        .horizontal-axis {
+            width: 400px;
+            height: 1px;
+            top: 200px;
+            left: 0;
+        }
+        .vertical-axis {
+            width: 1px;
+            height: 400px;
+            left: 200px;
+            top: 0;
+        }
+        .grid-line {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        .horizontal-grid {
+            width: 400px;
+            height: 1px;
+        }
+        .vertical-grid {
+            width: 1px;
+            height: 400px;
+        }
+        canvas {
+            image-rendering: pixelated;
+            border: 1px solid black;
+            width: 400px;
+            height: 400px;
+            background-color: white;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <input type="color" id="colorPicker" value="#000000">
+    <button onclick="clearCanvas()">Clear</button>
+    <button onclick="saveCanvas()">Save as PNG</button>
+    <label>
+        <input type="checkbox" id="mirrorX"> Mirror X
+    </label>
+    <label>
+        <input type="checkbox" id="mirrorY"> Mirror Y
+    </label>
+    
+    <div class="container" style="position: relative;">
+        <canvas id="drawingCanvas" width="20" height="20"></canvas>
+        <div class="horizontal-axis"></div>
+        <div class="vertical-axis"></div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById("drawingCanvas");
+        const ctx = canvas.getContext("2d");
+        const colorPicker = document.getElementById("colorPicker");
+        const mirrorX = document.getElementById("mirrorX");
+        const mirrorY = document.getElementById("mirrorY");
+        let isDrawing = false;
+        let isErasing = false;
+        
+        function getCursorPosition(event) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: Math.floor((event.clientX - rect.left) * scaleX),
+                y: Math.floor((event.clientY - rect.top) * scaleY)
+            };
+        }
+
+        function drawPixel(x, y, erase) {
+            if (erase) {
+                ctx.clearRect(x, y, 1, 1);
+            } else {
+                ctx.fillStyle = colorPicker.value;
+                ctx.fillRect(x, y, 1, 1);
+            }
+        }
+
+        canvas.addEventListener("mousedown", (event) => {
+            const pos = getCursorPosition(event);
+            isDrawing = event.button === 0;
+            isErasing = event.button === 2;
+            drawPixel(pos.x, pos.y, isErasing);
+            
+            if (mirrorX.checked) {
+                drawPixel(canvas.width - pos.x - 1, pos.y, isErasing);
+            }
+            if (mirrorY.checked) {
+                drawPixel(pos.x, canvas.height - pos.y - 1, isErasing);
+            }
+            if (mirrorX.checked && mirrorY.checked) {
+                drawPixel(canvas.width - pos.x - 1, canvas.height - pos.y - 1, isErasing);
+            }
+        });
+        
+        canvas.addEventListener("mouseup", () => {
+            isDrawing = false;
+            isErasing = false;
+        });
+        
+        canvas.addEventListener("mouseleave", () => {
+            isDrawing = false;
+            isErasing = false;
+        });
+        
+        canvas.addEventListener("mousemove", (event) => {
+            if (!isDrawing && !isErasing) return;
+            const pos = getCursorPosition(event);
+            drawPixel(pos.x, pos.y, isErasing);
+            
+            if (mirrorX.checked) {
+                drawPixel(canvas.width - pos.x - 1, pos.y, isErasing);
+            }
+            if (mirrorY.checked) {
+                drawPixel(pos.x, canvas.height - pos.y - 1, isErasing);
+            }
+            if (mirrorX.checked && mirrorY.checked) {
+                drawPixel(canvas.width - pos.x - 1, canvas.height - pos.y - 1, isErasing);
+            }
+        });
+        
+        colorPicker.addEventListener("input", () => {
+            const color = colorPicker.value;
+            const r = parseInt(color.substr(1, 2), 16);
+            const g = parseInt(color.substr(3, 2), 16);
+            const b = parseInt(color.substr(5, 2), 16);
+            const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+            canvas.style.backgroundColor = brightness > 128 ? "#333" : "white";
+        });
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function saveCanvas() {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext("2d");
+        tempCtx.drawImage(canvas, 0, 0);
+        const dataUrl = tempCanvas.toDataURL("image/png");
+
+        // Send image to Electron
+        window.electronAPI.saveImage(dataUrl);
+    }
+
+    window.electronAPI.onSaveResponse((response) => {
+        if (response.success) {
+            alert(`Image saved successfully at: ${response.path}`);
+        } else {
+            alert(`Error saving image: ${response.error}`);
+        }
+    });
+        
+        canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    </script>
+</body>
+</html>
