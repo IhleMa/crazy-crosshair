@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, protocol } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -16,7 +16,7 @@ function createWindow() {
         },
     });
 
-    win.loadFile("index.html");
+    win.loadFile(path.join(__dirname, "index.html"));
 }
 
 // Ensure the save folder exists
@@ -63,8 +63,81 @@ ipcMain.on("delete-drawing", (event, filePath) => {
     }
 });
 
+app.whenReady().then(() => {
+    protocol.registerFileProtocol("safe-file", (request, callback) => {
+        const url = request.url.replace("safe-file://", "");
+        callback({ path: path.normalize(url) });
+    });
+
+    createMainWindow();
+});
+
+
+app.whenReady().then(() => {
+    protocol.registerFileProtocol("safe-file", (request, callback) => {
+        const url = request.url.replace("safe-file://", "");
+        callback({ path: path.normalize(url) });
+    });
+
+    createMainWindow();
+});
+
+
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
 });
+
+
+let overlayWindow = null;
+
+ipcMain.on("open-overlay", (event, imagePath) => {
+    console.log("Received overlay request:", imagePath);
+
+    if (overlayWindow) {
+        overlayWindow.close();
+    }
+
+    overlayWindow = new BrowserWindow({
+        width: 200,
+        height: 200,
+        alwaysOnTop: true,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, "overlay-preload.js"),
+            webSecurity: false
+        }
+    });
+
+    // Resolve the correct overlay path
+    let overlayPath;
+    if (app.isPackaged) {
+        overlayPath = path.join(process.resourcesPath, "overlay.html");
+    } else {
+        overlayPath = path.join(__dirname, "overlay.html");
+    }
+
+    console.log("Loading overlay from:", overlayPath);
+
+    // Use a custom protocol to load local files in production
+    overlayWindow.loadURL(`file://${overlayPath}`).catch(err => {
+        console.error("Failed to load overlay:", err);
+    });
+
+    overlayWindow.webContents.once("did-finish-load", () => {
+        const formattedPath = `file://${imagePath.replace(/\\/g, "/")}`;
+        console.log("Sending formatted image path to overlay:", formattedPath);
+        overlayWindow.webContents.send("set-overlay-image", formattedPath);
+    });
+
+    overlayWindow.on("closed", () => {
+        overlayWindow = null;
+    });
+});
+
+

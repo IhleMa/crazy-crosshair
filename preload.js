@@ -6,7 +6,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
     deleteDrawing: (filePath) => ipcRenderer.send("delete-drawing", filePath),
     onSaveResponse: (callback) => ipcRenderer.on("save-image-response", (_event, response) => callback(response)),
     onDeleteResponse: (callback) => ipcRenderer.on("delete-image-response", (_event, response) => callback(response)),
+    openOverlay: (imagePath) => ipcRenderer.send("open-overlay", imagePath),
 });
+
 
 
 

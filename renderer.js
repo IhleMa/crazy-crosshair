@@ -8,30 +8,26 @@ async function loadGallery() {
     const gallery = document.getElementById("gallery");
     gallery.innerHTML = ""; // Clear gallery before reloading
 
-    // Check if the placeholder already exists
-    if (!document.getElementById("new-drawing-placeholder")) {
-        const newDrawingPlaceholder = document.createElement("div");
-        newDrawingPlaceholder.className = "gallery-item";
-        newDrawingPlaceholder.id = "new-drawing-placeholder"; // Unique ID
-        newDrawingPlaceholder.innerText = "+";
-        newDrawingPlaceholder.onclick = createNewDrawing;
-        gallery.appendChild(newDrawingPlaceholder);
-    }
+    const newDrawingPlaceholder = document.createElement("div");
+    newDrawingPlaceholder.className = "gallery-item";
+    newDrawingPlaceholder.id = "new-drawing-placeholder";
+    newDrawingPlaceholder.innerText = "+";
+    newDrawingPlaceholder.onclick = createNewDrawing;
+    gallery.appendChild(newDrawingPlaceholder);
 
     const images = await window.electronAPI.loadGallery();
-    
-    images.forEach(filePath => {
-        // Prevent duplicate images
-        if (document.querySelector(`[data-path="${filePath}"]`)) return;
 
+    images.forEach(filePath => {
         const imgContainer = document.createElement("div");
         imgContainer.className = "gallery-item";
-        imgContainer.setAttribute("data-path", filePath); // Unique identifier
+        imgContainer.setAttribute("data-path", filePath);
 
         const img = document.createElement("img");
-        img.src = `file://${filePath}?t=${new Date().getTime()}`; // Prevents caching issues
+        img.src = `file://${filePath}?t=${new Date().getTime()}`;
         img.className = "gallery-img";
-        img.onclick = () => loadImageToCanvas(img.src, filePath);
+        img.onclick = () => {
+            window.electronAPI.openOverlay(filePath); // Open overlay when clicked
+        };
 
         const deleteBtn = document.createElement("button");
         deleteBtn.innerText = "🗑";
@@ -43,6 +39,8 @@ async function loadGallery() {
         gallery.appendChild(imgContainer);
     });
 }
+
+
 
 
 
@@ -91,12 +89,15 @@ function saveCanvas() {
     window.electronAPI.onSaveResponse((response) => {
         if (response.success) {
             console.log("Image saved:", response.path);
-            setTimeout(loadGallery, 500); // Silent refresh
+            setTimeout(() => {
+                loadGallery(); // Ensure gallery updates correctly without duplicates
+            }, 500);
         } else {
             console.error("Save failed:", response.error);
         }
     });
 }
+
 
 
 
